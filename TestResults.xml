@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!--This file represents the results of running a test suite-->
-<test-results name="C:\MyProjects\github\ProjSrcaff\tests\YC.GraphParsingDemo.Tests\bin\Release\YC.GraphParsingDemo.Tests.dll" total="1" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2016-09-12" time="16:16:14">
-  <environment nunit-version="2.6.4.14350" clr-version="2.0.50727.8745" os-version="Microsoft Windows NT 6.2.9200.0" platform="Win32NT" cwd="C:\MyProjects\github\ProjSrcaff" machine-name="KIRILL-PC" user="Kirill" user-domain="Kirill-PC" />
+<test-results name="C:\MyProjects\github\YC.GraphparsingDemo\tests\YC.GraphParsingDemo.Tests\bin\Release\YC.GraphParsingDemo.Tests.dll" total="1" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2016-11-28" time="17:34:22">
+  <environment nunit-version="2.6.4.14350" clr-version="2.0.50727.8745" os-version="Microsoft Windows NT 6.2.9200.0" platform="Win32NT" cwd="C:\MyProjects\github\YC.GraphparsingDemo" machine-name="KIRILL-PC" user="Kirill" user-domain="Kirill-PC" />
   <culture-info current-culture="ru-RU" current-uiculture="ru-RU" />
-  <test-suite type="Assembly" name="C:\MyProjects\github\ProjSrcaff\tests\YC.GraphParsingDemo.Tests\bin\Release\YC.GraphParsingDemo.Tests.dll" executed="True" result="Success" success="True" time="0.078" asserts="0">
+  <test-suite type="Assembly" name="C:\MyProjects\github\YC.GraphparsingDemo\tests\YC.GraphParsingDemo.Tests\bin\Release\YC.GraphParsingDemo.Tests.dll" executed="True" result="Success" success="True" time="0.074" asserts="0">
     <results>
-      <test-suite type="Namespace" name="YC" executed="True" result="Success" success="True" time="0.069" asserts="0">
+      <test-suite type="Namespace" name="YC" executed="True" result="Success" success="True" time="0.065" asserts="0">
         <results>
-          <test-suite type="Namespace" name="GraphParsingDemo" executed="True" result="Success" success="True" time="0.069" asserts="0">
+          <test-suite type="Namespace" name="GraphParsingDemo" executed="True" result="Success" success="True" time="0.065" asserts="0">
             <results>
-              <test-suite type="TestFixture" name="Tests" executed="True" result="Success" success="True" time="0.068" asserts="0">
+              <test-suite type="TestFixture" name="Tests" executed="True" result="Success" success="True" time="0.064" asserts="0">
                 <results>
-                  <test-case name="YC.GraphParsingDemo.Tests.hello returns 42" executed="True" result="Success" success="True" time="0.060" asserts="1" />
+                  <test-case name="YC.GraphParsingDemo.Tests.hello returns 42" executed="True" result="Success" success="True" time="0.057" asserts="1" />
                 </results>
               </test-suite>
             </results>
