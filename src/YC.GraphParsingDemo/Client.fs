@@ -6,14 +6,6 @@ open WebSharper.Html.Client
 
 [<JavaScript>]
 module Client =
-
-    let Start input k =
-        async {
-            let! data = Server.DoSomething input
-            return k data
-        }
-        |> Async.Start
-
     let Main () =
         let input = Input [Attr.Value ""] -< []
         let output = H1 []
@@ -22,8 +14,7 @@ module Client =
             Button [Text "Send"]
             |>! OnClick (fun _ _ ->
                 async {
-                    let! data = Server.DoSomething input.Value
-                    output.Text <- data
+                    do()
                 }
                 |> Async.Start
             )
