@@ -21,10 +21,13 @@ module Parser =
             edges : InputEdge[]
         }
 
-    (*type ParsedSppf =
+    type SppfVertex = int * string
+    type SppfEdge = SppfVertex * SppfVertex
+    type ParsedSppf =
         {
-            
-        }*)
+            countOfVertex : int;
+            edges : SppfEdge[]
+        }
 
     type Token =
         | Term of string
@@ -63,7 +66,7 @@ module Parser =
             | Term(str) -> fg.indexator.termToIndex str
             | EOF -> fg.indexator.eofIndex
 
-        let genLiteral (s:string) (i:int): Token option = None
+        let genLiteral (s :string) (i : int) : Token option = None
     
         let isLiteral (t : Token) : bool = false
         let isTerminal (t : Token) : bool = true
@@ -125,10 +128,138 @@ module Parser =
         let ``2^32`` = 256L * 256L * 256L * 256L
         (int <| ext / ``2^32``, int <| ext % (``2^32`` * 1L<extension>))
 
-    let getFormalSubgraph (tree : Tree<Token>) : InputGraph =
+    
+    let graphToMap (inputG: ParserInputGraph<Token>) : Map<(int * int), (string * bool)> =
+        inputG.Edges
+        |> Seq.filter (fun edge -> edge.Tag <> EOF)
+        |> Seq.map (fun edge ->
+                   (edge.Source, edge.Target),
+                   ((match edge.Tag with Term(str) -> str), false))
+        |> Map.ofSeq
 
-        let rec f (edges : list<InputEdge>) (count : int ref) (toks : array<Token> ) (current : obj) =
-            if current <> null then
+    let mapToGraph (graph : Map<(int * int), (string * bool)>) : InputGraph =
+        let count = graph.Count
+        let edges = graph
+                    |> Map.toArray
+                    |> Array.map (fun ((s, t), (tok, is)) -> (s, t, tok, is))
+        {
+            countOfVertex = count
+            edges = edges
+        }
+
+    let treeToParsed (node : obj) (filter : obj -> bool) : ParsedSppf =
+        let mutable edges = []
+        let mutable count = 0
+        let mutable been = []
+        let rec f (curr : obj) (prev : SppfVertex) : unit =
+            if curr <> null then
+                match curr with
+                | :? TerminalNode as node ->
+                    if (filter node)
+                    then
+                        let fsti, scnd = unpackExtension(node.Extension)
+                        let str = (node.Name).ToString() + " " + (fsti.ToString()) + " " + (scnd.ToString())
+                        if prev <> (-1, "")
+                        then
+                            edges <- List.append edges [(prev, (count, str))]
+                        else
+                            do()
+                        if List.contains curr been
+                        then
+                            do()
+                        else
+
+                            count <- count + 1
+                            been <- List.append been [node]
+                    else
+                        do()
+                | :? PackedNode as node ->
+                    if (filter node)
+                    then
+                        let str = (node.Production).ToString()
+                        let vert = (count, str)
+                        if prev <> (-1, "")
+                        then
+                            edges <- List.append edges [(prev, vert)]
+                        else 
+                            do()
+                        if List.contains curr been
+                        then
+                            do()
+                        else
+                            count <- count + 1
+                            been <- List.append been [node]
+                            f node.Left vert
+                            f node.Right vert
+                    else
+                        do()
+                | :? NonTerminalNode as node ->
+                    if (filter node)
+                    then
+                        let fst, scnd = unpackExtension(node.Extension)
+                        let str = (node.Name).ToString() + " " + (fst.ToString()) + " " + (scnd.ToString())
+                        let vert = (count, str)
+                        if prev <> (-1, "")
+                        then
+                            edges <- List.append edges [(prev, vert)]
+                        else 
+                            do()
+                        if List.contains curr been
+                        then
+                            do()
+                        else
+                            count <- count + 1
+                            been <- List.append been [node]
+                            f node.First vert
+                            if node.Others <> null
+                            then
+                                for t in node.Others do
+                                    f t vert
+                            else
+                                do()
+                    else
+                        do()                    
+                | :? IntermidiateNode as node ->
+                    if (filter node)
+                    then
+                        let fst, scnd = unpackExtension(node.Extension)
+                        let str = (node.Slot).ToString() + " " + (fst.ToString()) + " " + (scnd.ToString())
+                        let vert = (count, str)
+                        if prev <> (-1, "")
+                        then
+                            edges <- List.append edges [(prev, vert)]
+                        else 
+                            do()
+                        if List.contains curr been
+                        then
+                            do()
+                        else
+                            count <- count + 1
+                            been <- List.append been [node]
+                            f node.First vert
+                            if node.Others <> null
+                            then
+                                for t in node.Others do
+                                    f t vert
+                            else
+                                do()
+                    else
+                        do()
+            else
+                do()
+        f node (-1, "")
+        {
+            countOfVertex = count
+            edges = List.toArray edges
+        }
+
+    let toInputGraph (graph : ParserInputGraph<Token>) : InputGraph =
+        mapToGraph (graphToMap graph)
+
+    let getFormalSubgraph (tree : Tree<Token>) (graph : Map<(int * int), (string * bool)>): InputGraph =
+        let rec f (graph : Map<(int * int), (string * bool)>) (toks : array<Token> ) (current : obj) =
+            if current <> null 
+            then
                 match current with
                 | :? TerminalNode as node ->
                     if node.Extension <> packExtension -1 -1
@@ -136,33 +267,166 @@ module Parser =
                         let fst, scnd = unpackExtension((node :> INode).getExtension())
                         let tok = toks.[node.Name]
                         let str = match tok with | Term(st) -> st | EOF -> ""
-                        count := !count + 1
-                        List.append edges [(fst, scnd, str, true)]
+                        graph.Add ((fst, scnd), (str, true))
                     else
-                        edges
+                        graph
                 | :? PackedNode as node ->
-                    let l = f edges count toks node.Left
-                    let r = f edges count toks node.Right
-                    List.append l r
+                    let l = f graph toks node.Left
+                    let r = f l toks node.Right
+                    r
                 | :? NonTerminalNode as node ->
-                    let fst = f edges count toks node.First
-                    let sq = seq {
-                        for t in node.Others ->
-                            f edges count toks t }
-                    List.append fst (List.concat sq)
+                    let fst = f graph toks node.First
+                    let mutable last = fst
+                    let mutable res = fst
+                    for t in node.Others do
+                        res <- f last toks t
+                        last <- res
+                    res
                 | :? IntermidiateNode as node ->
-                    let fst = f edges count toks node.First
-                    let sq = seq {
-                        for t in node.Others ->
-                            f edges count toks t }
-                    List.append fst (List.concat sq)
-                | _ -> edges
+                    let fst = f graph toks node.First
+                    let mutable last = fst
+                    let mutable res = fst
+                    for t in node.Others do
+                        res <- f last toks t
+                        last <- res
+                    res
+                | _ -> graph
             else
-                edges
-        let mutable count = ref 0
-        let edges = f [] count tree.tokens tree.Root
+                graph
+        let edges = f graph tree.tokens tree.Root
+        let res = mapToGraph edges
+        res
 
-        {
-            countOfVertex = !count
-            edges = List.toArray edges
-        }
+    type ResNode =
+    | Suc of NonTerminalNode
+    | None
+    | Error of string
+
+    
+    let getNonTermNode (tree : Tree<Token>) (ext : int64<extension>) : ResNode =
+        let rec f (current : obj) =
+            if current <> null 
+            then
+                match current with
+                | :? TerminalNode as node ->
+                    None
+                | :? PackedNode as node ->
+                    let l = f node.Left
+                    if l <> None
+                    then
+                        l
+                    else
+                        
+                        let r = f node.Right
+                        r
+                | :? NonTerminalNode as node ->
+                    if node.Extension = ext
+                    then
+                        Suc(node)
+                    else
+                        let fst = f node.First
+                        if fst <> None
+                        then
+                            fst
+                        else
+                            let mutable is = false
+                            let mutable nd = node
+                            for t in node.Others do
+                                let cu = f t
+                                if cu <> None
+                                then
+                                    is <- true
+                                    match cu with Suc(x) -> nd <- x
+                                else do()
+                            if is
+                            then
+                                Suc(nd)
+                            else
+                                None
+                                    
+                | :? IntermidiateNode as node ->
+                    let fst = f node.First
+                    if fst <> None
+                        then
+                            fst
+                        else
+                            let mutable is = false
+                            let mutable nd = new NonTerminalNode(1, ext)
+                            for t in node.Others do
+                                let cu = f t
+                                if cu <> None
+                                then
+                                    is <- true
+                                    match cu with Suc(x) -> nd <- x
+                                else do()
+                            if is
+                            then
+                                Suc(nd)
+                            else
+                                None
+                | _ -> None
+            else
+                Error "There is no nodes in tree"
+        f tree.Root
+
+    let getEdgesOfMinLen (node : NonTerminalNode) =
+        let rec f (curr : obj) (map : list<int * int>) (len : int) (nodes : list<obj>) =
+            match curr with
+                | :? TerminalNode as node ->
+                    if node.Extension <> packExtension -1 -1
+                    then
+                        (List.append map [(unpackExtension node.Extension)] , len + 1, List.append nodes [node] )
+                    else
+                        (map, len, nodes)
+                | :? PackedNode as node ->
+                    let mapl, lenl, ndsl = f node.Left map len nodes
+                    let mapr, lenr, ndsr = f node.Right map len nodes
+                    (List.append mapl mapr, lenr + lenl, List.append (List.append ndsl ndsr) [node] )
+                | :? NonTerminalNode as node ->
+                    let mp, ln, nods = f node.First map len nodes
+                    let mutable min = ln
+                    let mutable res = mp
+                    let mutable ndes = nods
+                    if node.Others <> null
+                    then
+                        for t in node.Others do
+                            let mpn, lnn, nds = f t map len nodes
+                            if lnn < min
+                            then
+                                min <- lnn
+                                res <- mpn
+                                ndes <- nds
+                            else do()
+                    else do()
+                    (res, min, List.append ndes [node])
+                | :? IntermidiateNode as node ->
+                    let mp, ln, nods = f node.First map len nodes
+                    let mutable min = ln
+                    let mutable res = mp
+                    let mutable ndes = nods
+                    if node.Others <> null
+                    then
+                        for t in node.Others do
+                            let mpn, lnn, nds = f t map len nodes
+                            if lnn < min
+                            then
+                                min <- lnn
+                                res <- mpn
+                                ndes <- nds
+                            else do()
+                    else do()
+                    (res, min, List.append ndes [node])
+        let edges, _, nodes = f node [] 0 []
+        (edges, nodes)
+
+    let getTreeOfMnLn (edges : list<int * int>) (nodes : list<obj>) (node) (graph : InputGraph) =
+        let tree : ParsedSppf =
+            (treeToParsed node (fun x -> List.contains x nodes))
+        let markedGraph : InputGraph =
+            {
+                countOfVertex = graph.countOfVertex
+                edges =
+                    graph.edges
+                    |> Array.map (fun (a, b, c, _) -> (a, b, c, List.contains (a, b) edges) )
+            }
+        (tree, markedGraph)

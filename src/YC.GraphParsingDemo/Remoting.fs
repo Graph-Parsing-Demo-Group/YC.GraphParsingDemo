@@ -18,6 +18,7 @@ module Server =
     type Result =
         | SucSppf of Tree<Parser.Token>
         | SucSppfGraph of Tree<Parser.Token> * Parser.InputGraph
+        | SucTreeGraph of Parser.ParsedSppf * Parser.InputGraph
         | SucGraph of Parser.InputGraph
         | Error of string
 
@@ -58,7 +59,7 @@ module Server =
             |  _  -> ""
 
     [<Rpc>]
-    let Draw (grammar'text : string) (graph'text : string) (isMinimised : bool) =
+    let Draw (grammar'text : string) (graph'text : string) (isMinimised : bool) (isFormal : bool)=
         try
             if grammar'text = "" && graph'text = "" then Error "Empty input"
             elif graph'text = "" then Error "Empty graph input"
@@ -70,20 +71,46 @@ module Server =
                 | Yard.Generators.GLL.ParserCommon.ParseResult.Success tree ->
                     if isMinimised
                     then
-                        SucSppf tree
+                        if isFormal
+                        then
+                            let formalSubgraph = Parser.getFormalSubgraph tree (Parser.graphToMap graph)
+                            if formalSubgraph.countOfVertex <> 0
+                            then
+                                SucSppfGraph(tree, formalSubgraph)
+                            else
+                                Error "There is no verticles in subgraph"
+                        else
+                            SucSppfGraph (tree, Parser.toInputGraph graph)
                     else
-                        SucSppf tree
+                        if isFormal
+                        then
+                            let formalSubgraph = Parser.getFormalSubgraph tree (Parser.graphToMap graph)
+                            if formalSubgraph.countOfVertex <> 0
+                            then
+                                SucSppfGraph(tree, formalSubgraph)
+                            else
+                                Error "There is no verticles in subgraph"
+                        else
+                            SucSppfGraph (tree, Parser.toInputGraph graph)
         with
         | e -> Error e.Message
 
     [<Rpc>]
-    let getFormalSubgraph (tree : Tree<Parser.Token>) =
+    let findMinLen (tree : Tree<Parser.Token>) (graph : Parser.InputGraph) (first : int) (second : int) =
         try
-            let formalSubgraph = Parser.getFormalSubgraph tree
-            if formalSubgraph.countOfVertex <> 0
-            then
-                SucGraph(formalSubgraph)
-            else
-                Error "There is no verticles in subgraph"
+            let nTNode = Parser.getNonTermNode tree (packExtension first second)
+            match nTNode with
+            | Parser.ResNode.Suc(node) ->
+                let edges, nodes = Parser.getEdgesOfMinLen node
+                let tree, graph = Parser.getTreeOfMnLn edges nodes node graph
+                SucTreeGraph(tree, graph)
+            |  Parser.ResNode.None -> 
+                Error "No such nodes found"
+            |  Parser.ResNode.Error msg -> 
+                Error msg
         with
         |e -> Error e.Message
+
+    [<Rpc>]
+    let sppfToParsed (tree : Tree<Parser.Token>) =
+        Parser.treeToParsed tree.Root (fun _ -> true)
