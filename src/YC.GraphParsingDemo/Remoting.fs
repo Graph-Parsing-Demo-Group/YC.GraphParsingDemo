@@ -73,14 +73,16 @@ module Server =
                     then
                         if isFormal
                         then
-                            let formalSubgraph = Parser.getFormalSubgraph tree (Parser.graphToMap graph)
+                            let minimisedTree = Parser.minimiseSppf tree
+                            let formalSubgraph = Parser.getFormalSubgraph minimisedTree (Parser.graphToMap graph)
                             if formalSubgraph.countOfVertex <> 0
                             then
-                                SucSppfGraph(tree, formalSubgraph)
+                                SucSppfGraph(minimisedTree, formalSubgraph)
                             else
                                 Error "There is no verticles in subgraph"
                         else
-                            SucSppfGraph (tree, Parser.toInputGraph graph)
+                            let minimisedTree = Parser.minimiseSppf tree
+                            SucSppfGraph (minimisedTree, Parser.toInputGraph graph)
                     else
                         if isFormal
                         then
