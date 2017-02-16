@@ -30,7 +30,6 @@ module Templating =
                 A [Attr.HRef (ctx.Link act)] -< [Text txt]
              ]
         [
-            LI ["Home" => EndPoint.Home]
             LI ["About" => EndPoint.About]
         ]
 
@@ -47,14 +46,13 @@ module Site =
 
     let HomePage ctx =
         Templating.Main ctx EndPoint.Home "Home" [
-            H1 [Text "Say Hi to the server!"]
             Div [ClientSide <@ Client.Main() @>]
         ]
 
     let AboutPage ctx =
         Templating.Main ctx EndPoint.About "About" [
             H1 [Text "About"]
-            P [Text "This is a template WebSharper client-server application."]
+            P [Text "This is the best application you've ever seen."]
         ]
 
     [<Website>]
