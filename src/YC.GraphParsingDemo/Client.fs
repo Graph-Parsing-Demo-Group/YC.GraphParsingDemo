@@ -16,7 +16,10 @@ module wsfl = WebSharper.Formlets.Layout
 
 [<JavaScript>]
 module Client =
-           
+    
+    let mutable globalTree : obj = null
+    let mutable globalGraph : obj = null
+
     let screenWidth = JQuery.JQuery.Of("html").Width()
     let screenHeight = JQuery.JQuery.Of("html").Height()
 
@@ -69,19 +72,30 @@ module Client =
         |> wsfe.WithLabelAbove
         |> wsfe.WithFormContainer
 
-    let ShowGraphImageControl lbl (graph: string) (ch1: bool) (grammar:string) (ch2: bool)  = 
+    let ShowGraphImageControl lbl ((graph : Option<Parser.InputGraph>), str : string)  = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
-            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            match graph with
+            | None ->
+                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            | Some grph ->
+                do()
+                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
         )
        |> wsfe.WithTextLabel lbl 
        |> wsfe.WithLabelAbove 
        |> wsfe.WithFormContainer  
 
-    let ShowSPPFImageControl lbl (graph: string) (ch1: bool) (grammar:string) (ch2: bool)  = 
+    let ShowSPPFImageControl lbl ((tree : Option<Yard.Generators.Common.ASTGLL.Tree<Parser.Token>>), str : string) = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
-            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            match tree with
+            | None ->
+                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            | Some tr ->
+                let tre = Server.sppfToParsed tr
+                do()
+                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
         )
        |> wsfe.WithTextLabel lbl 
        |> wsfe.WithLabelAbove 
@@ -137,9 +151,18 @@ module Client =
             let MegaOutputForm  = 
                 let VisualizationForm  = 
                     wsff.Do {
-                    let! picture1 = ShowGraphImageControl "Graph Visualization" graph ch1 grammar ch2
-                    let! picture2 = ShowSPPFImageControl "SPPF" graph ch1 grammar ch2
-                    return (picture1, picture2)
+                        match Server.Draw grammar graph ch1 ch2 with
+                        | Server.Result.Error msg ->
+                            let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
+                            let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
+                            return (picture1, picture2)
+                        | Server.Result.SucSppfGraph (tree, graph) ->
+                            let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
+                            let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
+                            globalTree <- tree
+                            globalGraph  <- graph
+                            return (picture1, picture2)
+                        
                     } |> wsff.Horizontal |> wsfe.WithFormContainer 
                 wsff.Do {
                     let! x = VisualizationForm 
@@ -148,6 +171,7 @@ module Client =
             let RangeAndButtonForm  =
                     wsff.Do {
                     let! rng = RangeControl
+
                     return rng  }                   
                     |> wsfe.WithCustomSubmitButton ({ wsfe.FormButtonConfiguration.Default with 
                                                                                                 Label = Some "Извлечь чото"
@@ -159,7 +183,29 @@ module Client =
                     let! y =  RangeAndButtonForm
                     return (x, y) }
                     |> wsff.Vertical
-                
+            let VisualizationForm2  = 
+                        wsff.Do {
+                        if fst rng < snd rng
+                        then
+                            if globalTree <> null && globalGraph <> null
+                            then
+                                match Server.findMinLen globalTree (Parser.toInputGraph globalGraph) (fst rng) (snd rng) with
+                                | Server.Result.Error msg ->
+                                    let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
+                                    let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
+                                | Server.Result.SucSppfGraph (tree, graph) ->
+                                    let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
+                                    let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
+                            else
+                                let! picture1 = ShowGraphImageControl "Graph Visualization" (None, "No Sppf")
+                                let! picture2 = ShowSPPFImageControl "SPPF" (None, "No Sppf")
+                        else
+                            let! picture1 = ShowGraphImageControl "Graph Visualization" (None, "incorrect range")
+                            let! picture2 = ShowSPPFImageControl "SPPF" (None, "incorrect range")
+                        let!  Show
+                                return (picture1, picture2)
+                        
+                    } |> wsff.Horizontal |> wsfe.WithFormContainer        
         wsff.Do {
                 let! x = MegaInputForm 
                 let! y =  ExtraOutputForm x

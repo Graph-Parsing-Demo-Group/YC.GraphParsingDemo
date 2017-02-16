@@ -1,6 +1,6 @@
 (function()
 {
- var Global=this,Runtime=this.IntelliFactory.Runtime,Control,FSharpEvent,List,Html,Client,Attr,Tags,FileReader,IntelliFactory,Formlets,Base,Result,EventsPervasives,Formlets1,Formlet,YC,GraphParsingDemo,Client1,Enhance,Controls,Data,FormButtonConfiguration,String,jQuery;
+ var Global=this,Runtime=this.IntelliFactory.Runtime,Control,FSharpEvent,List,Html,Client,Attr,Tags,FileReader,IntelliFactory,Formlets,Base,Result,EventsPervasives,Formlets1,Formlet,YC,GraphParsingDemo,Client1,Enhance,Controls,Data,FormButtonConfiguration,Remoting,AjaxRemotingProvider,Operators,MatchFailureException,String,jQuery;
  Runtime.Define(Global,{
   YC:{
    GraphParsingDemo:{
@@ -159,30 +159,74 @@
        _builder_2=Formlet.Do();
        formlet1=_builder_2.Delay(function()
        {
-        return _builder_2.Bind(Client1.ShowGraphImageControl("Graph Visualization",graph,ch1,grammar,ch2),function(_arg7)
-        {
-         return _builder_2.Bind(Client1.ShowSPPFImageControl("SPPF",graph,ch1,grammar,ch2),function(_arg8)
+        var matchValue,_,msg,tree,graph1;
+        matchValue=AjaxRemotingProvider.Sync("YC.GraphParsingDemo:1",[grammar,graph,ch1,ch2]);
+        if(matchValue.$==4)
          {
-          return _builder_2.Return([_arg7,_arg8]);
-         });
-        });
+          msg=matchValue.$0;
+          _=_builder_2.Bind(Client1.ShowGraphImageControl("Graph Visualization",{
+           $:0
+          },msg),function(_arg7)
+          {
+           return _builder_2.Bind(Client1.ShowSPPFImageControl("SPPF",{
+            $:0
+           },msg),function(_arg8)
+           {
+            return _builder_2.Return([_arg7,_arg8]);
+           });
+          });
+         }
+        else
+         {
+          if(matchValue.$==1)
+           {
+            tree=matchValue.$0;
+            graph1=matchValue.$1;
+            _=_builder_2.Bind(Client1.ShowGraphImageControl("Graph Visualization",{
+             $:1,
+             $0:graph1
+            },""),function(_arg9)
+            {
+             return _builder_2.Bind(Client1.ShowSPPFImageControl("SPPF",{
+              $:1,
+              $0:tree
+             },""),function(_arg10)
+             {
+              Client1.globalTree=function()
+              {
+               return tree;
+              };
+              Client1.globalGraph=function()
+              {
+               return graph1;
+              };
+              return _builder_2.Return([_arg9,_arg10]);
+             });
+            });
+           }
+          else
+           {
+            _=Operators.Raise(MatchFailureException.New("C:\\MyProjects\\github\\gpdg\\src\\YC.GraphParsingDemo\\Client.fs",154,30));
+           }
+         }
+        return _;
        });
        formlet2=Formlet.Horizontal(formlet1);
        VisualizationForm=Enhance.WithFormContainer(formlet2);
        _builder_3=Formlet.Do();
        MegaOutputForm=_builder_3.Delay(function()
        {
-        return _builder_3.Bind(VisualizationForm,function(_arg9)
+        return _builder_3.Bind(VisualizationForm,function(_arg11)
         {
-         return _builder_3.Return(_arg9);
+         return _builder_3.Return(_arg11);
         });
        });
        _builder_4=Formlet.Do();
        x2=_builder_4.Delay(function()
        {
-        return _builder_4.Bind(Client1.RangeControl(),function(_arg10)
+        return _builder_4.Bind(Client1.RangeControl(),function(_arg12)
         {
-         return _builder_4.Return(_arg10);
+         return _builder_4.Return(_arg12);
         });
        });
        inputRecord1=FormButtonConfiguration.get_Default();
@@ -202,11 +246,11 @@
        _builder_5=Formlet.Do();
        formlet3=_builder_5.Delay(function()
        {
-        return _builder_5.Bind(MegaOutputForm,function(_arg11)
+        return _builder_5.Bind(MegaOutputForm,function(_arg13)
         {
-         return _builder_5.Bind(RangeAndButtonForm,function(_arg12)
+         return _builder_5.Bind(RangeAndButtonForm,function(_arg14)
          {
-          return _builder_5.Return([_arg11,_arg12]);
+          return _builder_5.Return([_arg13,_arg14]);
          });
         });
        });
@@ -215,11 +259,11 @@
       _builder_6=Formlet.Do();
       formlet6=_builder_6.Delay(function()
       {
-       return _builder_6.Bind(MegaInputForm,function(_arg13)
+       return _builder_6.Bind(MegaInputForm,function(_arg15)
        {
-        return _builder_6.Bind(ExtraOutputForm(_arg13),function(_arg14)
+        return _builder_6.Bind(ExtraOutputForm(_arg15),function(_arg16)
         {
-         return _builder_6.Return([_arg13,_arg14]);
+         return _builder_6.Return([_arg15,_arg16]);
         });
        });
       });
@@ -266,29 +310,50 @@
       formlet4=Enhance.WithLabelAbove(formlet3);
       return Enhance.WithFormContainer(formlet4);
      }),
-     ShowGraphImageControl:function(lbl)
+     ShowGraphImageControl:function(lbl,graph)
      {
       var formlet,formlet1,formlet2;
       formlet=Formlet.OfElement(function()
       {
-       var hw,arg10;
+       var hw,_,arg10,arg101;
        hw="height: "+(Client1.getFormSize(90,540))[0]+"; width: "+(Client1.getFormSize(120,540))[1];
-       arg10=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
-       return Tags.Tags().NewTag("img",arg10);
+       if(graph.$==1)
+        {
+         graph.$0;
+         arg10=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
+         _=Tags.Tags().NewTag("img",arg10);
+        }
+       else
+        {
+         arg101=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
+         _=Tags.Tags().NewTag("img",arg101);
+        }
+       return _;
       });
       formlet1=Enhance.WithTextLabel(lbl,formlet);
       formlet2=Enhance.WithLabelAbove(formlet1);
       return Enhance.WithFormContainer(formlet2);
      },
-     ShowSPPFImageControl:function(lbl)
+     ShowSPPFImageControl:function(lbl,tree)
      {
       var formlet,formlet1,formlet2;
       formlet=Formlet.OfElement(function()
       {
-       var hw,arg10;
+       var hw,_,tr,arg10,arg101;
        hw="height: "+(Client1.getFormSize(90,540))[0]+"; width: "+(Client1.getFormSize(120,540))[1];
-       arg10=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
-       return Tags.Tags().NewTag("img",arg10);
+       if(tree.$==1)
+        {
+         tr=tree.$0;
+         AjaxRemotingProvider.Sync("YC.GraphParsingDemo:3",[tr]);
+         arg10=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
+         _=Tags.Tags().NewTag("img",arg10);
+        }
+       else
+        {
+         arg101=List.ofArray([Attr.Attr().NewAttr("style",hw),Attr.Attr().NewAttr("src","yeahboy.png")]);
+         _=Tags.Tags().NewTag("img",arg101);
+        }
+       return _;
       });
       formlet1=Enhance.WithTextLabel(lbl,formlet);
       formlet2=Enhance.WithLabelAbove(formlet1);
@@ -301,6 +366,14 @@
       copyOfStruct1=width*Client1.screenWidth()/1366>>0;
       return[String(copyOfStruct)+"px",String(copyOfStruct1)+"px"];
      },
+     globalGraph:Runtime.Field(function()
+     {
+      return null;
+     }),
+     globalTree:Runtime.Field(function()
+     {
+      return null;
+     }),
      screenHeight:Runtime.Field(function()
      {
       return jQuery("html").height();
@@ -351,6 +424,10 @@
   Controls=Runtime.Safe(Formlets1.Controls);
   Data=Runtime.Safe(Formlets1.Data);
   FormButtonConfiguration=Runtime.Safe(Enhance.FormButtonConfiguration);
+  Remoting=Runtime.Safe(Global.WebSharper.Remoting);
+  AjaxRemotingProvider=Runtime.Safe(Remoting.AjaxRemotingProvider);
+  Operators=Runtime.Safe(Global.WebSharper.Operators);
+  MatchFailureException=Runtime.Safe(Global.WebSharper.MatchFailureException);
   String=Runtime.Safe(Global.String);
   return jQuery=Runtime.Safe(Global.jQuery);
  });
@@ -359,6 +436,8 @@
   Client1.style();
   Client1.screenWidth();
   Client1.screenHeight();
+  Client1.globalTree();
+  Client1.globalGraph();
   Client1.RangeControl();
   Client1.MegaGigaForm();
   Client1.FileControl();

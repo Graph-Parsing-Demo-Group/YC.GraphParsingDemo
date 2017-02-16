@@ -26,7 +26,7 @@ module Server =
         | Graph
         | Grammar
 
-    [<Rpc>]
+    (*[<Rpc>]
     let LoadDefaultFileNames (fileType: FileType) =
         match fileType with
         | Grammar ->
@@ -40,23 +40,15 @@ module Server =
                 "Graph1"
                 "Graph2"
                 "Graph3"
-            ]
+            ]*)
 
     [<Rpc>]
-    let LoadDefaultFile (fileType: FileType) name =
+    let LoadDefaultFile (fileType: FileType) =
         match fileType with
         | Grammar ->
-            match name with
-            | "Grammar1" -> @"Gram1"
-            | "Grammar2" -> @"Gram2"
-            | "Grammar3" -> @"Gram3"
-            |  _  -> ""
+            @"Gram1"
         | Graph ->
-            match name with
-            | "Graph1" -> @"Graph1"
-            | "Graph2" -> @"Graph2"
-            | "Graph3" -> @"Graph3"
-            |  _  -> ""
+            @"Graph1"
 
     [<Rpc>]
     let Draw (grammar'text : string) (graph'text : string) (isMinimised : bool) (isFormal : bool)=
