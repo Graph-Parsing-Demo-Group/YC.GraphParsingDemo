@@ -71,31 +71,41 @@ module Client =
         |> wsfe.WithTextLabel "Vertices"
         |> wsfe.WithLabelAbove
         |> wsfe.WithFormContainer
+    
+    let ErrorControl errortxt = 
+        wsff.Do {
+            let! ErrorBox =
+                wsfc.Input errortxt 
+                |>  setFormSize (getFormSize 20 50) "output"
+            return ErrorBox }
+        |> wsfe.WithFormContainer
 
-    let ShowGraphImageControl lbl ((graph : Option<Parser.InputGraph>), str : string)  = 
+    let ShowGraphImageControl lbl (graph : Parser.InputGraph)  = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
-            match graph with
-            | None ->
-                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
-            | Some grph ->
-                do()
-                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            do()
+            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
         )
        |> wsfe.WithTextLabel lbl 
        |> wsfe.WithLabelAbove 
        |> wsfe.WithFormContainer  
 
-    let ShowSPPFImageControl lbl ((tree : Option<Yard.Generators.Common.ASTGLL.Tree<Parser.Token>>), str : string) = 
+    let ShowTreeImageControl lbl (tree : Parser.ParsedSppf)  = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
-            match tree with
-            | None ->
-                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
-            | Some tr ->
-                let tre = Server.sppfToParsed tr
-                do()
-                Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            do()
+            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+        )
+       |> wsfe.WithTextLabel lbl 
+       |> wsfe.WithLabelAbove 
+       |> wsfe.WithFormContainer  
+
+    let ShowSPPFImageControl lbl (tree : Yard.Generators.Common.ASTGLL.Tree<Parser.Token>) = 
+       wsff.OfElement (fun () ->
+            let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
+            let tre = Server.sppfToParsed tr
+            do()
+            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
         )
        |> wsfe.WithTextLabel lbl 
        |> wsfe.WithLabelAbove 
@@ -142,48 +152,49 @@ module Client =
             <*> (GraphInputForm))
             |> wsff.Horizontal
             |> wsfe.WithCustomSubmitButton ({ wsfe.FormButtonConfiguration.Default with 
-                                                                                            Label = Some "Show me love" 
+                                                                                            Label = Some "SHOW GRAPH" 
                                                                                             Style = Some style                                                                                
                                                                                             })
             |> wsff.Vertical
                 
-        let ExtraOutputForm (((graph: string),( ch1: bool)), ((grammar: string), (ch2: bool))) =   
-            let MegaOutputForm  = 
-                let VisualizationForm  = 
-                    wsff.Do {
-                        match Server.Draw grammar graph ch1 ch2 with
-                        | Server.Result.Error msg ->
-                            let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
-                            let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
-                            return (picture1, picture2)
-                        | Server.Result.SucSppfGraph (tree, graph) ->
-                            let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
-                            let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
-                            globalTree <- tree
-                            globalGraph  <- graph
-                            return (picture1, picture2)
+        let ExtraOutputForm (((graph: string),( ch1: bool)), ((grammar: string), (ch2: bool))) =   //общая форма для всего, что ниже кнопки "show graph"
+            let BothVisualizationForms = 
+                let MegaOutputForm  =                               // объединяет визуализацию и rangecontrol
+                    let VisualizationForm  =                        // здесь выводятся оба графа
+                        wsff.Do {
+                            match Server.Draw grammar graph ch1 ch2 with
+                            | Server.Result.Error msg ->
+                                let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
+                                let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
+                                return (picture1, picture2)
+                            | Server.Result.SucSppfGraph (tree, graph) ->
+                                let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
+                                let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
+                                globalTree <- tree
+                                globalGraph  <- graph
+                                return (picture1, picture2)
                         
-                    } |> wsff.Horizontal |> wsfe.WithFormContainer 
-                wsff.Do {
-                    let! x = VisualizationForm 
-                    return x }
-
-            let RangeAndButtonForm  =
+                        } |> wsff.Horizontal |> wsfe.WithFormContainer 
                     wsff.Do {
-                    let! rng = RangeControl
+                        let! x = VisualizationForm 
+                        return x }
 
-                    return rng  }                   
-                    |> wsfe.WithCustomSubmitButton ({ wsfe.FormButtonConfiguration.Default with 
-                                                                                                Label = Some "Извлечь чото"
-                                                                                                Style = Some style 
-                                                                                                })   
-                    |> wsff.Horizontal    
-            wsff.Do {
-                    let! x = MegaOutputForm 
-                    let! y =  RangeAndButtonForm
-                    return (x, y) }
-                    |> wsff.Vertical
-            let VisualizationForm2  = 
+                let RangeAndButtonForm  =
+                        wsff.Do {
+                        let! rng = RangeControl
+
+                        return rng  }                   
+                        |> wsfe.WithCustomSubmitButton ({ wsfe.FormButtonConfiguration.Default with 
+                                                                                                    Label = Some "FIND PATH"
+                                                                                                    Style = Some style 
+                                                                                                    })   
+                        |> wsff.Horizontal    
+                wsff.Do {
+                        let! x = MegaOutputForm 
+                        let! y =  RangeAndButtonForm
+                        return (x, y) }
+                        |> wsff.Vertical
+            let VisualizationForm2  = // визуализация кратчайшего пути (появляется после кнопки "find path")
                         wsff.Do {
                         if fst rng < snd rng
                         then
@@ -191,21 +202,26 @@ module Client =
                             then
                                 match Server.findMinLen globalTree (Parser.toInputGraph globalGraph) (fst rng) (snd rng) with
                                 | Server.Result.Error msg ->
-                                    let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
-                                    let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
-                                | Server.Result.SucSppfGraph (tree, graph) ->
-                                    let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
-                                    let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
+                                    let! picture1 = ErrorControl msg
+                                    return (picture1)
+                                | Server.Result.SucTreeGraph (tree, graph) ->
+                                    let! picture1 = ShowGraphImageControl "Path" graph
+                                    let! picture2 = ShowTreeImageControl "SPPF Path" tree
+                                    return (picture1, picture2)
                             else
-                                let! picture1 = ShowGraphImageControl "Graph Visualization" (None, "No Sppf")
-                                let! picture2 = ShowSPPFImageControl "SPPF" (None, "No Sppf")
+                                let! picture1 = ErrorControl "incorrect range"
+                                return (picture1)
                         else
-                            let! picture1 = ShowGraphImageControl "Graph Visualization" (None, "incorrect range")
-                            let! picture2 = ShowSPPFImageControl "SPPF" (None, "incorrect range")
-                        let!  Show
-                                return (picture1, picture2)
+                            let! picture1 = ErrorControl "incorrect range"
+                            return (picture1)
                         
-                    } |> wsff.Horizontal |> wsfe.WithFormContainer        
+                                 } |> wsff.Horizontal |> wsfe.WithFormContainer
+            wsff.Do {
+                let! x = BothVisualizationForms 
+                let! y =  VisualizationForm2
+                return (x, y) }
+                |> wsff.Vertical  
+                     
         wsff.Do {
                 let! x = MegaInputForm 
                 let! y =  ExtraOutputForm x
