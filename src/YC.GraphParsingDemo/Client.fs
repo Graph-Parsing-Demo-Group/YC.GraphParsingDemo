@@ -17,8 +17,12 @@ module wsfl = WebSharper.Formlets.Layout
 [<JavaScript>]
 module Client =
     
-    let mutable globalTree : obj = null
-    let mutable globalGraph : obj = null
+    let mutable globalTree : Yard.Generators.Common.ASTGLL.Tree<Parser.Token> = null
+    let mutable globalGraph : Parser.InputGraph = 
+        {
+            countOfVertex = 0
+            edges = [||]
+        }
 
     let screenWidth = JQuery.JQuery.Of("html").Width()
     let screenHeight = JQuery.JQuery.Of("html").Height()
@@ -72,19 +76,21 @@ module Client =
         |> wsfe.WithLabelAbove
         |> wsfe.WithFormContainer
     
-    let ErrorControl errortxt = 
+    let ErrorControl errortxt lbl = 
         wsff.Do {
-            let! ErrorBox =
-                wsfc.Input errortxt 
-                |>  setFormSize (getFormSize 20 50) "output"
-            return ErrorBox }
+        let! output =
+            wsff.OfElement (fun () -> TextArea [Attr.ReadOnly "readonly"; Text errortxt] )
+            |> wsfe.WithTextLabel lbl
+            |> wsfe.WithLabelAbove
+            |> setFormSize (getFormSize 90 540) "textarea" 
+        return output  }
         |> wsfe.WithFormContainer
 
     let ShowGraphImageControl lbl (graph : Parser.InputGraph)  = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
             do()
-            Img[Attr.Style hw; Attr.Src "yeahboy.png"]
+            Img[Attr.Style hw; Attr.Src "yeahboy.pnfg"]
         )
        |> wsfe.WithTextLabel lbl 
        |> wsfe.WithLabelAbove 
@@ -103,7 +109,7 @@ module Client =
     let ShowSPPFImageControl lbl (tree : Yard.Generators.Common.ASTGLL.Tree<Parser.Token>) = 
        wsff.OfElement (fun () ->
             let hw = "height: " + fst(getFormSize 90 540) + "; width: " + snd(getFormSize 120 540)
-            let tre = Server.sppfToParsed tr
+            let tre = Server.sppfToParsed tree
             do()
             Img[Attr.Style hw; Attr.Src "yeahboy.png"]
         )
@@ -135,14 +141,14 @@ module Client =
         let MegaInputForm = 
             let GraphInputForm  = 
                 wsff.Do {
-                    let! graph = InputControl "Graph" ""
+                    let! graph = InputControl "Graph" ( Server.LoadDefaultFile Server.FileType.Graph)
                     let! checkbox1 = wsfc.Checkbox false |> wsfe.WithTextLabel "Show formal subgraph" |> wsfe.WithLabelLeft |> wsfe.WithFormContainer 
                     return(graph, checkbox1)
                     }        
                 |> wsff.Vertical  
             let GrammarInputForm =          
                     wsff.Do {
-                        let! grammar = InputControl "Grammar" ""
+                        let! grammar = InputControl "Grammar"( Server.LoadDefaultFile Server.FileType.Grammar)
                         let! checkbox2 = wsfc.Checkbox false |> wsfe.WithTextLabel "Remove redundant nodes" |> wsfe.WithLabelLeft|> wsfe.WithFormContainer 
                         return (grammar, checkbox2)
                     }
@@ -157,19 +163,19 @@ module Client =
                                                                                             })
             |> wsff.Vertical
                 
-        let ExtraOutputForm (((graph: string),( ch1: bool)), ((grammar: string), (ch2: bool))) =   //общая форма для всего, что ниже кнопки "show graph"
+        let ExtraOutputForm (((grammar: string),( ch1: bool)), ((graph: string), (ch2: bool))) =   //общая форма для всего, что ниже кнопки "show graph"
             let BothVisualizationForms = 
                 let MegaOutputForm  =                               // объединяет визуализацию и rangecontrol
                     let VisualizationForm  =                        // здесь выводятся оба графа
                         wsff.Do {
                             match Server.Draw grammar graph ch1 ch2 with
                             | Server.Result.Error msg ->
-                                let! picture1 = ShowGraphImageControl "Graph Visualization" (None, msg)
-                                let! picture2 = ShowSPPFImageControl "SPPF" (None, msg)
+                                let! picture1 = ErrorControl msg "Graph Visualization"
+                                let! picture2 = ErrorControl msg "SPPF"
                                 return (picture1, picture2)
                             | Server.Result.SucSppfGraph (tree, graph) ->
-                                let! picture1 = ShowGraphImageControl "Graph Visualization" ((Some graph), "")
-                                let! picture2 = ShowSPPFImageControl "SPPF" ((Some tree), "")
+                                let! picture1 = ShowGraphImageControl "Graph Visualization" graph
+                                let! picture2 = ShowSPPFImageControl "SPPF" tree
                                 globalTree <- tree
                                 globalGraph  <- graph
                                 return (picture1, picture2)
@@ -194,31 +200,34 @@ module Client =
                         let! y =  RangeAndButtonForm
                         return (x, y) }
                         |> wsff.Vertical
-            let VisualizationForm2  = // визуализация кратчайшего пути (появляется после кнопки "find path")
+            let VisualizationForm2 rng  = // визуализация кратчайшего пути (появляется после кнопки "find path")
                         wsff.Do {
                         if fst rng < snd rng
                         then
-                            if globalTree <> null && globalGraph <> null
+                            if globalTree <> null
                             then
-                                match Server.findMinLen globalTree (Parser.toInputGraph globalGraph) (fst rng) (snd rng) with
+                                match Server.findMinLen globalTree globalGraph (fst rng) (snd rng) with
                                 | Server.Result.Error msg ->
-                                    let! picture1 = ErrorControl msg
-                                    return (picture1)
+                                    let! picture1 = ErrorControl msg "Path"
+                                    let! picture2 = ErrorControl msg "SPPF Path" 
+                                    return (picture1, picture2)
                                 | Server.Result.SucTreeGraph (tree, graph) ->
                                     let! picture1 = ShowGraphImageControl "Path" graph
                                     let! picture2 = ShowTreeImageControl "SPPF Path" tree
                                     return (picture1, picture2)
                             else
-                                let! picture1 = ErrorControl "incorrect range"
-                                return (picture1)
+                                let! picture1 = ErrorControl "empty" "Path"
+                                let! picture2 = ErrorControl "empty" "SPPF Path"
+                                return (picture1, picture2)
                         else
-                            let! picture1 = ErrorControl "incorrect range"
-                            return (picture1)
+                            let! picture1 = ErrorControl "incorrect range" "Path"
+                            let! picture2 = ErrorControl "incorrect range" "SPPF Path"
+                            return (picture1, picture2)
                         
                                  } |> wsff.Horizontal |> wsfe.WithFormContainer
             wsff.Do {
                 let! x = BothVisualizationForms 
-                let! y =  VisualizationForm2
+                let! y =  VisualizationForm2 (snd x)
                 return (x, y) }
                 |> wsff.Vertical  
                      
