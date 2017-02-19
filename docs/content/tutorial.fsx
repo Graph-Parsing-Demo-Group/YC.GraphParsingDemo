@@ -16,7 +16,7 @@ You can also upload files from your device. <br>
 If you want to show formal subgraph of input graph and/or remove redundant nodes from SPPF, use checkboxes under the graph input form.<br>
 <img src="img/check.jpg" alt="checkboxes"/> 
 <br>
-When you press "SHOW GRAPH" button, two newbuttons will appear:<br>
+When you press "SHOW GRAPH" button, two new buttons will appear:<br>
 <img src="img/show.jpg" alt="showtime"/>
 <br>To see graph or SPPF visualizations press their respective buttons. 
 <br>To extract minimal length path between two specific vertices of the input graph, write their numbers in special form and press "FIND PATH".
@@ -32,7 +32,9 @@ Using examples
 
  * Example 2 <img src="img/2.jpg" alt="example2"/>
 
- * Example 3 <img src="img/3.jpg" alt="example3"/>
+ * Example 2 (part 2) <img src="img/3.jpg" alt="example3"/>
+
+ * Example 3 <img src="img/4.jpg" alt="example4"/>
 
 
 
