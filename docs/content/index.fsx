@@ -8,31 +8,23 @@ YC.GraphParsingDemo
 ======================
 
 Documentation
-
+YC.GraphParsingDemo is web application for parsing and visualizing graphs and SPPFs (Shared Packed Parse Forests). <br>
+This app can also visuailze formal subgraphs, filter out redundant nodes from SPPF and search for minimal length path betweeen two specified vertices of the input graph.
 <div class="row">
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The YC.GraphParsingDemo library can be <a href="https://nuget.org/packages/YC.GraphParsingDemo">installed from NuGet</a>:
-      <pre>PM> Install-Package YC.GraphParsingDemo</pre>
+      Use the YC.Graph Parsing demo web application:
+      <pre><a href="">ref</a></pre>
     </div>
   </div>
   <div class="span1"></div>
 </div>
-
 Example
+
 -------
-
-This example demonstrates using a function defined in this sample library.
-
-*)
-#r "YC.GraphParsingDemo.dll"
-open YC.GraphParsingDemo
-
-printfn "hello = %i" <| Library.hello 0
-
-(**
-Some more info
+This example demonstrates using the web application for parsing graphs.
+<img src="img/1.jpg" alt="example"/>
 
 Samples & documentation
 -----------------------

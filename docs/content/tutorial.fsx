@@ -4,16 +4,36 @@
 #I "../../bin"
 
 (**
-Introducing your project
+Tutorial
 ========================
 
-Say more
+Start
+---------------
 
-*)
-#r "YC.GraphParsingDemo.dll"
-open YC.GraphParsingDemo
+To start YCGraphParsingDemo application you need to type in grammar and graph and press "SHOW GRAPH" button. 
+<img src="img/filled.jpg" alt="filledUI"/>
+You can also upload files from your device. <br>
+If you want to show formal subgraph of input graph and/or remove redundant nodes from SPPF, use checkboxes under the graph input form.<br>
+<img src="img/check.jpg" alt="checkboxes"/> 
+<br>
+When you press "SHOW GRAPH" button, two newbuttons will appear:<br>
+<img src="img/show.jpg" alt="showtime"/>
+<br>To see graph or SPPF visualizations press their respective buttons. 
+<br>To extract minimal length path between two specific vertices of the input graph, write their numbers in special form and press "FIND PATH".
+<img src="img/path.jpg" alt="path"/><br>
+After that you will see two other visualization controls as you did in previous step. 
+Note that unchecking one of the checkboxes, clicking on "SHOW GRAPH" the second time or changing text in the input forms will reset visualization. 
+Clicking on one of visualisation windows will refresh it and allow you to change the graph layout.
 
-Library.hello 0
-(**
-Some more info
+
+Using examples
+------------------
+ * Example 1 <img src="img/1.jpg" alt="example1"/>
+
+ * Example 2 <img src="img/2.jpg" alt="example2"/>
+
+ * Example 3 <img src="img/3.jpg" alt="example3"/>
+
+
+
 *)
