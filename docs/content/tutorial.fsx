@@ -19,7 +19,7 @@ If you want to show formal subgraph of input graph and/or remove redundant nodes
 When you press "SHOW GRAPH" button, two new buttons will appear:<br>
 <img src="img/show.jpg" alt="showtime"/>
 <br>To see graph or SPPF visualizations press their respective buttons. 
-<br>To extract minimal length path between two specific vertices of the input graph, write their numbers in special form and press "FIND PATH".
+<br>To extract minimal length path between two specific vertices of the input graph write their numbers in special form and press "FIND PATH".
 <img src="img/path.jpg" alt="path"/><br>
 After that you will see two other visualization controls as you did in previous step. 
 Note that unchecking one of the checkboxes, clicking on "SHOW GRAPH" the second time or changing text in the input forms will reset visualization. 
